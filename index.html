@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cano</title>
+<style>
+:root{--bg:#f2f6fa;--surf:#fff;--tx:#0c1a2b;--mut:#5b6b7e;--ac:#1e88e5;--ac2:#00bcd4;--me:#1e88e5;--me-tx:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#07111f;--surf:#101e33;--tx:#e8f1fb;--mut:#8da2b8}}
+:root[data-theme="dark"]{--bg:#07111f;--surf:#101e33;--tx:#e8f1fb;--mut:#8da2b8}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
+header{padding:14px 18px;font-weight:600;font-size:18px;display:flex;align-items:center;gap:10px}
+header i{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--ac),var(--ac2))}
+#chat{flex:1;overflow-y:auto;padding:8px 14px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:82%;padding:10px 14px;border-radius:18px;line-height:1.4;font-size:16px;white-space:pre-wrap}
+.b{background:var(--surf);align-self:flex-start;border-bottom-left-radius:5px}
+.u{background:var(--me);color:var(--me-tx);align-self:flex-end;border-bottom-right-radius:5px}
+#bar{display:flex;gap:8px;padding:10px 12px 14px}
+#txt{flex:1;border:0;border-radius:24px;padding:13px 16px;font-size:16px;background:var(--surf);color:var(--tx);outline:none}
+.btn{border:0;border-radius:50%;width:48px;height:48px;font-size:20px;color:#fff;background:linear-gradient(135deg,var(--ac),var(--ac2));cursor:pointer}
+#ov{position:fixed;inset:0;background:radial-gradient(circle at 50% 45%,#0d3b66,#050b16 70%);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9;color:#fff}
+#ov.on{display:flex}
+.orb{position:relative;width:150px;height:150px;display:flex;align-items:center;justify-content:center}
+.core{width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#7fe9ff,#1e88e5 60%,#0a3d8f);box-shadow:0 0 60px #1e88e5;animation:br 1.6s ease-in-out infinite}
+.ring{position:absolute;inset:0;border-radius:50%;border:2px solid #4fc3f7;opacity:0;animation:rp 2.4s ease-out infinite}
+.ring:nth-child(2){animation-delay:.8s}.ring:nth-child(3){animation-delay:1.6s}
+@keyframes rp{0%{transform:scale(.7);opacity:.8}100%{transform:scale(4.2);opacity:0}}
+@keyframes br{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+#ov.think .core{animation:br .6s ease-in-out infinite;filter:hue-rotate(60deg)}
+#ov.talk .core{animation:br .35s ease-in-out infinite;filter:hue-rotate(-30deg)}
+#ov.think .ring,#ov.talk .ring{animation-duration:1.4s}
+#st{margin-top:60px;font-size:20px}
+#heard{margin-top:12px;padding:0 28px;text-align:center;color:#9fc4e8;min-height:48px;font-size:16px}
+#x{margin-top:36px;background:#ffffff22;color:#fff;border:0;border-radius:28px;padding:12px 30px;font-size:16px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.ring{animation:none}}
+#pn{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
+#pn.on{display:flex}
+#pn .box{background:var(--surf);color:var(--tx);border-radius:20px;padding:18px;width:100%;max-width:380px;max-height:85%;overflow:auto;display:flex;flex-direction:column;gap:8px}
+#pn h3{margin:0}
+#pn input{border:1px solid var(--mut);border-radius:12px;padding:11px;font-size:16px;background:transparent;color:var(--tx)}
+#pn button{border:0;border-radius:12px;padding:11px;font-size:16px;background:var(--ac);color:#fff}
+.ct{display:flex;justify-content:space-between;align-items:center}
+.ct button{background:none!important;color:var(--mut)!important;padding:4px 10px!important}
+.m a{display:inline-block;margin-top:8px;padding:9px 16px;border-radius:20px;background:var(--ac);color:#fff;text-decoration:none}
+</style>
+</head>
+<body>
+<header><i></i>Cano</header>
+<div id="chat"><div class="m b">Merhaba İsa! Mikrofona dokun, tam ekran seni dinleyeyim.</div></div>
+<div id="bar"><input id="txt" placeholder="Yaz…" autocomplete="off"><button class="btn" id="send">➤</button><button class="btn" id="mic">🎤</button></div>
+<div id="ov"><div class="orb"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="core"></div></div><div id="st">Dinliyorum…</div><div id="heard"></div><button id="x">Kapat</button></div>
+<div id="pn"><div class="box"><h3>Kişiler</h3><div id="lst"></div><input id="cn" placeholder="İsim (örn. Anne)"><input id="cp" placeholder="Numara (örn. 05321234567)" inputmode="tel"><button id="ca">Ekle</button><button id="cx">Kapat</button></div></div>
+<script>
+var chat=document.getElementById('chat'),txt=document.getElementById('txt'),ov=document.getElementById('ov'),st=document.getElementById('st'),heard=document.getElementById('heard');
+var hist=[],rec=null,busy=false,open=false;
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+var PERSONA="Adın Cano. Sen İsa'nın kişisel sesli asistanısın. Sıcak ve esprilisin: hafif şakalar yaparsın ama konu ciddiyse (sağlık, para, hukuk, dert, önemli bilgi) şakayı bırakıp ciddi ve doğru konuşursun. Her soruya bilgin dahilinde cevap verirsin; emin değilsen bunu dürüstçe söylersin, uydurmazsın. Güncel haber, hava durumu, skor gibi anlık bilgileri bilmediğini söylersin. Sesli konuşulduğu için kısa tut: genelde 2-4 cümle, kullanıcı detay isterse uzat. Türkçe cevap ver. Kullanıcının adı İsa. Kullanıcı birini aramak isterse, kimi aradığını söyle ve arama ekranını açabileceğini belirt.";
+function add(t,c){var d=document.createElement('div');d.className='m '+c;d.textContent=t;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;return d}
+function setS(c,t){ov.className=open?'on '+c:'';st.textContent=t}
+function speak(t,done){
+  try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang='tr-TR';u.onend=done;u.onerror=done;speechSynthesis.speak(u)}catch(e){done()}
+}
+async function ask(q){
+  if(busy)return;add(q,'u');var ci=callIntent(q);if(!ci&&contactCmd(q))return;if(ci){doCall(ci);return}busy=true;hist.push({role:'user',content:q});
+  if(open){setS('think','Düşünüyorum…')}
+  var out=add('…','b'),ans='';
+  try{
+    var sample=await claude.use('sample');
+    if(!sample){throw new Error('no')}
+    var r=await sample([{role:'user',content:PERSONA+'\n\nKonuşma:\n'+hist.map(function(m){return (m.role==='user'?'İsa: ':'Cano: ')+m.content}).join('\n')+'\nCano:'}],{cache:false});
+    ans=r.text.trim();
+  }catch(e){ans='Seni duydum. Cevap kısmı henüz bağlı değil, onu bir sonraki adımda bağlayacağız.'}
+  out.textContent=ans;hist.push({role:'assistant',content:ans});busy=false;
+  if(open){setS('talk','Konuşuyorum…');heard.textContent=ans;speak(ans,function(){if(open)listen()})}
+}
+function listen(){
+  if(!SR){setS('','Bu tarayıcı sesi desteklemiyor. Chrome veya Safari dene.');return}
+  try{
+    rec=new SR();rec.lang='tr-TR';rec.interimResults=true;rec.continuous=false;var final='';
+    setS('','Dinliyorum…');heard.textContent='';
+    rec.onresult=function(e){var s='';for(var i=0;i<e.results.length;i++){s+=e.results[i][0].transcript;if(e.results[i].isFinal)final=s}heard.textContent=s};
+    rec.onend=function(){if(!open)return;if(final)ask(final);else listen()};
+    rec.onerror=function(e){if(e.error==='not-allowed'||e.error==='service-not-allowed'){heard.textContent='Mikrofon izni gerekli.';open=true}};
+    rec.start();
+  }catch(e){}
+}
+function openOv(){open=true;ov.className='on';listen()}
+function closeOv(){open=false;ov.className='';try{rec&&rec.abort()}catch(e){}try{speechSynthesis.cancel()}catch(e){}}
+var contacts=[];try{contacts=JSON.parse(localStorage.getItem('diva_c')||'[]')}catch(e){}
+function saveC(){try{localStorage.setItem('diva_c',JSON.stringify(contacts))}catch(e){}}
+function renderC(){var l=document.getElementById('lst');l.textContent='';if(!contacts.length){l.textContent='Henüz kimse yok.'}contacts.forEach(function(c,i){var r=document.createElement('div');r.className='ct';var s=document.createElement('span');s.textContent=c.n+' · '+c.p;var b=document.createElement('button');b.textContent='✕';b.onclick=function(){contacts.splice(i,1);saveC();renderC()};r.appendChild(s);r.appendChild(b);l.appendChild(r)})}
+function callIntent(q){var n=q.toLocaleLowerCase('tr'),w=n.split(/[^a-zçğıöşü0-9]+/).filter(Boolean);
+ if(!w.some(function(x){return /^(ara|arar|arasana|arasan|arayalım|arayayım|arayım)$/.test(x)}))return null;
+ if(w.length>9)return null;
+ var wa=/whatsapp|watsap|vatsap|whats/.test(n);
+ for(var i=0;i<contacts.length;i++){var nm=contacts[i].n.toLocaleLowerCase('tr').split(' ')[0];if(nm&&w.some(function(x){return x.indexOf(nm)===0}))return{n:contacts[i].n,p:contacts[i].p,wa:wa}}
+ return{none:true}}
+function contactCmd(q){var m=q.match(/^\s*(?:kişi|kisi)\s+ekle\s+(.+?)\s+(\+?[0-9][0-9\s]{8,})\s*$/i),r;
+ if(m){var nm=m[1].trim(),p=m[2].replace(/\s+/g,'');contacts=contacts.filter(function(c){return c.n.toLocaleLowerCase('tr')!==nm.toLocaleLowerCase('tr')});contacts.push({n:nm,p:p});saveC();r=nm+' kaydedildi. Artık sadece "'+nm+' ara" demen yeter.'}
+ else if((m=q.match(/^\s*(?:kişi|kisi)\s+sil\s+(.+)$/i))){var d=m[1].trim().toLocaleLowerCase('tr');contacts=contacts.filter(function(c){return c.n.toLocaleLowerCase('tr')!==d});saveC();r='Sildim.'}
+ else if(/^\s*(kişilerim|kisilerim)\s*$/i.test(q)){r=contacts.length?'Kayıtlı kişiler: '+contacts.map(function(c){return c.n}).join(', '):'Henüz kimse kayıtlı değil.'}
+ else return false;
+ add(r,'b');if(open){setS('talk','Konuşuyorum…');heard.textContent=r;speak(r,function(){closeOv()})}return true}
+function doCall(ci){var t,out=add('','b');
+ if(ci.none){t='Bu kişinin numarası bende yok. Bir kere şöyle söyle: kişi ekle, ismi, numarası.';out.textContent=t}
+ else{var num=ci.p.replace(/[^0-9+]/g,''),url;
+  if(ci.wa){num=num.replace(/^\+/,'');if(num.charAt(0)==='0')num='90'+num.slice(1);url='https://wa.me/'+num}else{url='tel:'+num}
+  t=ci.n+' için '+(ci.wa?'WhatsApp’ı':'arama ekranını')+' hazırladım. Altındaki tuşa dokun.';
+  out.textContent=t+'\n';var a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';a.textContent=(ci.wa?'WhatsApp’ta ':'')+ci.n+' ara';out.appendChild(a);chat.scrollTop=chat.scrollHeight;try{window.open(url,'_blank')}catch(e){}}
+ if(open){setS('talk','Konuşuyorum…');heard.textContent=t;speak(t,function(){closeOv()})}}
+window.openPn=function(){renderC();document.getElementById('pn').className='on'};
+document.getElementById('cx').onclick=function(){document.getElementById('pn').className=''};
+document.getElementById('ca').onclick=function(){var n=document.getElementById('cn'),p=document.getElementById('cp');if(n.value.trim()&&p.value.trim()){contacts.push({n:n.value.trim(),p:p.value.trim()});saveC();n.value='';p.value='';renderC()}};
+document.getElementById('mic').onclick=openOv;
+document.getElementById('x').onclick=closeOv;
+function go(){var v=txt.value.trim();if(v){txt.value='';ask(v)}}
+document.getElementById('send').onclick=go;
+txt.addEventListener('keydown',function(e){if(e.key==='Enter')go()});
+</script>
+</body>
+</html>
